@@ -1,6 +1,6 @@
 import requests, json
 
-token = "Bearer BQAd5FxWLtCP9_fFoVufQ3QPWxUSkiJ7aJ0GZbWVcVHErVRol1ZpB_2DOm9aeA5IPU_Z-_Ki6WjgSr7NRpcRRs7ar9huk5ohrDEysh2MABwZx8Z1wlO7IHVTBkfHNvDCcnTFXmnX2EY"
+token = "Bearer YOUR TOKEN"
 
 def reloadInputs():
     print("Por favor, ingrese un número válido.\n")
@@ -97,8 +97,8 @@ def getAlbumInfo(albumLink):
 from Adafruit_IO import Client, Feed
 import json
 
-ADAFRUIT_IO_USERNAME = "tathiana_pp"
-ADAFRUIT_IO_KEY = "aio_jLcO87Ad19PXqBFpVpy04AUrKGNC"
+ADAFRUIT_IO_USERNAME = "YOUR ADAFRUIT.IO USERNAME"
+ADAFRUIT_IO_KEY = "YOUR ADAFRUIT.IO KEY"
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 danceabilityFeed = aio.feeds('danceability')
 energyFeed = aio.feeds('energy')
