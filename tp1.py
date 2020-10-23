@@ -1,6 +1,6 @@
 import requests, json
 
-token = "Bearer BQB9At9VcCy92J4RycRklB_mMFPvLaLCmDru-6Kg4kdaOHrRl8_1Io-Z-Uc4qlNJBCW_k9CWKOjPeafZvsw1EAwXdDvuBmnqNcIAl8M5Est32DDU78jzIAi3P5F03nE47hS7UbAwXvQ"
+token = "Bearer BQAd5FxWLtCP9_fFoVufQ3QPWxUSkiJ7aJ0GZbWVcVHErVRol1ZpB_2DOm9aeA5IPU_Z-_Ki6WjgSr7NRpcRRs7ar9huk5ohrDEysh2MABwZx8Z1wlO7IHVTBkfHNvDCcnTFXmnX2EY"
 
 def reloadInputs():
     print("Por favor, ingrese un número válido.\n")
@@ -8,17 +8,27 @@ def reloadInputs():
 def getTrackInfo(trackLink):
     trackId = trackLink.split('/')[-1]
 
-    urlQuerytrack = f"https://api.spotify.com/v1/audio-features/{trackId}"
-    respuestaHTTPtrack = requests.get(urlQuerytrack, headers={"Authorization": token})
+    urlQueryTrackAudio = f"https://api.spotify.com/v1/audio-features/{trackId}"
+    responseTrackAudo = requests.get(urlQueryTrackAudio, headers={"Authorization": token})
+    trackAudio = responseTrackAudo.json()
 
-    trackInfo = respuestaHTTPtrack.json()
+    urlQueryTrackInfo = f"https://api.spotify.com/v1/tracks/{trackId}"
+    responseTrackInfo = requests.get(urlQueryTrackInfo, headers={"Authorization": token})
+    trackInfo = responseTrackInfo.json()
 
-    print("Danceability", trackInfo["danceability"])
-    print("Energy", trackInfo["energy"])
-    print("Instrumentalness", trackInfo["instrumentalness"])
+
+    print("Name:", trackInfo["name"])
+    print("Danceability:", trackAudio["danceability"])
+    print("Energy:", trackAudio["energy"])
+    print("Instrumentalness:", trackAudio["instrumentalness"])
     print()
 
-def getMultipleTracksInfo(tracksIds):
+    aio.send_data(cancionesFeed.key, trackInfo["name"])
+    aio.send_data(danceabilityFeed.key, trackAudio["danceability"])
+    aio.send_data(energyFeed.key, trackAudio["energy"])
+    aio.send_data(instrumentalnessFeed.key, trackAudio["instrumentalness"])
+
+def getMultipleTracksInfo(tracksIds, name):
     urlTracks = "https://api.spotify.com/v1/audio-features?ids="
     for trackId in tracksIds:
         urlTracks += trackId + ","
@@ -46,37 +56,54 @@ def getMultipleTracksInfo(tracksIds):
     energy = round(energy, 3)
     instrumentalness = round(instrumentalness, 3)
     
-    print("Danceability", danceability)
-    print("Energy", energy)
-    print("Instrumentalness", instrumentalness)
+    print("Name:", name)
+    print("Danceability:", danceability)
+    print("Energy:", energy)
+    print("Instrumentalness:", instrumentalness)
     print()
+
+    aio.send_data(cancionesFeed.key, name)
+    aio.send_data(danceabilityFeed.key, danceability)
+    aio.send_data(energyFeed.key, energy)
+    aio.send_data(instrumentalnessFeed.key, instrumentalness)
 
 def getPlaylistInfo(playlistLink):
     playlistId = playlistLink.split('/')[-1].split('?')[0]
 
-    urlQueryPlaylist = f"https://api.spotify.com/v1/playlists/{playlistId}/tracks?additional_types=track"
-    respuestaHTTPplaylist = requests.get(urlQueryPlaylist, headers={"Authorization": token})
-    playlist = respuestaHTTPplaylist.json()
+    urlQueryPlaylist = f"https://api.spotify.com/v1/playlists/{playlistId}"
+    responsePlaylist = requests.get(urlQueryPlaylist, headers={"Authorization": token})
+    playlist = responsePlaylist.json()
 
     tracksIds = []
-    for track in playlist["items"]:
-        tracksIds.append(track["track"]["id"])
+    for track in playlist["tracks"]["items"]:
+        if(track["track"] and track["track"]["type"] == "track"): tracksIds.append(track["track"]["id"])
 
-    getMultipleTracksInfo(tracksIds)
+    getMultipleTracksInfo(tracksIds, playlist["name"])
 
 def getAlbumInfo(albumLink):
 
     albumId = albumLink.split('/')[-1].split('?')[0]
 
-    urlQueryAlbum = f"https://api.spotify.com/v1/albums/{albumId}/tracks?limit=50"
-    respuestaHTTPalbum = requests.get(urlQueryAlbum, headers={"Authorization": token})
-    album = respuestaHTTPalbum.json()
+    urlQueryAlbum = f"https://api.spotify.com/v1/albums/{albumId}"
+    responseAlbum = requests.get(urlQueryAlbum, headers={"Authorization": token})
+    album = responseAlbum.json()
 
     tracksIds = []
-    for track in album["items"]:
-        tracksIds.append(track["id"])
+    for track in album["tracks"]["items"]:
+        if(track["type"] == "track"): tracksIds.append(track["id"])
         
-    getMultipleTracksInfo(tracksIds)
+    getMultipleTracksInfo(tracksIds, album["name"])
+
+from Adafruit_IO import Client, Feed
+import json
+
+ADAFRUIT_IO_USERNAME = "tathiana_pp"
+ADAFRUIT_IO_KEY = "aio_jLcO87Ad19PXqBFpVpy04AUrKGNC"
+aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+danceabilityFeed = aio.feeds('danceability')
+energyFeed = aio.feeds('energy')
+instrumentalnessFeed = aio.feeds('instrumentalness')
+cancionesFeed = aio.feeds('canciones')
 
 print("Ingrese un link de una CANCION, PLAYLIST o ALBUM de Spotify para analizarlo! Si desea TERMINAR, ingrese un '0'")
 
